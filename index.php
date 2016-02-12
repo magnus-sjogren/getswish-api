@@ -1,161 +1,139 @@
-<h1>Hello world!</h1>
-<?php
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shop by Swish</title>
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha256-7s5uDGW3AHqw6xtJmNNtr+OBRJUlgkNJEo78P4b0yRw= sha512-nNo+yCHEyn0smMxSswnf/OnX6/KwJuZTlNZBjauKhTK0c+zT+q5JOCx0UFhXQ6rJR9jg6Es8gPuD2uZcYDLqSw==" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+  <script>
+    $(document).ready(function(){
+
+      var transId = false;
+
+      var poll = function(){
+        $(".loader-img").toggleClass("hide", false);
+        $(".success-img").toggleClass("hide", true);
+        setTimeout(function(){
+          console.warn("Polling...");
+          $.get("ajax.php?transactionId=" + transId, function(data){
+            $("#msg").html(data);
+            data = JSON.parse(data);
+            if(data && data.status == "PAID"){
+              alert("Thank you for your order!");
+              // Perform redirect to order confirmation
+              console.info("Order completed.");
+              $(".loader-img").toggleClass("hide", true);
+              $(".success-img").toggleClass("hide", false);
+              resetTransaction();
+            }else{
+              console.warn("Status: " + data.status);
+              poll();
+            }
+          });
+        }, 500);
+      };
+
+      $("#send-btn").click(function(){
+        var nr = $("#phone").val();
+        $.get("ajax.php?phone=" + nr, function(data){
+          $("#msg").html(data);
+          data = JSON.parse(data);
+          transId = data.transactionId;
+          console.info("Transid: " + transId);
+          $("#transid-input").val(transId);
+          poll();
+        });
+      });
+
+      $("#status-unpaid-btn").click(function resetTransaction(){
+        $.post("callback.php", {"transactionId": transId, "status":"UNPAID"}, function(data){
+          $("#status-unpaid-btn").toggleClass("active", true);
+          $("#status-paid-btn").toggleClass("active", false);
+
+          console.log("Data (unpaid): " + data);
+          $("#msg").html(data);
+        });
+      });
+
+      $("#status-paid-btn").click(function(){
+        $.post("callback.php", {"transactionId": transId, "status":"PAID"}, function(data){
+          $("#status-unpaid-btn").toggleClass("active", false);
+          $("#status-paid-btn").toggleClass("active", true);
+
+          console.log("Data (paid): " + data);
+          $("#msg").html(data);
+        });
+      });
+
+    });
+  </script>
+</head>
+<body>
+  <br><br>
+  <div class="container">
+
+<form class="form-horizontal">
+<fieldset>
 
 
-
-function createPayment($paymentReference, $payerAlias, $amount, $message, $config){
-	try{
-
-		if($payerAlias != ""){
-
-			$data = array("payeePaymentReference" => $paymentReference,
-				"callbackUrl" => $config["callbackUrl"],
-				"payerAlias" => $payerAlias, //"46720000001",
-				"payeeAlias" => $config["payeeAlias"],
-				"amount" => $amount, 
-				"currency" => $config["currency"],
-				"message" => $message);
-
-		}else{
-			
-			$data = array("payeePaymentReference" => $paymentReference,
-				"callbackUrl" => $config["callbackUrl"],
-				"payeeAlias" => $config["payeeAlias"],
-				"amount" => $amount, 
-				"currency" => $config["currency"],
-				"message" => $message);
-
-		}
-
-		$data_string = json_encode($data);
-
-		//Debug: request body
-		echo "<h2>Sent data:</h2>" . "<pre>" . $data_string . "</pre>" . "<hr>";
-
-		$ch = curl_init('https://mss.swicpc.bankgirot.se/swish-cpcapi/api/v1/paymentrequests/'); 
-		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
-		//curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); //Uncomment this if you didn't add the root CA, curl will then ignore the SSL verification error.
-		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Content-Length: ' . strlen($data_string)) );
-
-		curl_setopt($ch, CURLOPT_CAINFO,  $config["CAINFO"]);
-		curl_setopt($ch, CURLOPT_SSLCERT,  $config["SSLCERT"]);
-		curl_setopt($ch, CURLOPT_SSLKEY,  $config["SSLKEY"]);
-		curl_setopt($ch, CURLOPT_SSLCERTPASSWD,  $config["SSLCERTPASSWD"]);
-		curl_setopt($ch, CURLOPT_SSLKEYPASSWD,  $config["SSLKEYPASSWD"]);
-
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_VERBOSE, 1);
-		curl_setopt($ch, CURLOPT_HEADER, 1);
-
-		$result = curl_exec($ch);
-
-		//Debug: result, including headers
-		echo "<h2>Result</h2>";
-		echo "<pre>";
-		echo $result;
-		echo "</pre>";
-		echo "<pre>";
-		echo "CURLINFO_EFFECTIVE_URL: " . curl_getinfo($ch, CURLINFO_EFFECTIVE_URL) . "\n";
-		echo "CURLINFO_HTTP_CODE: " . curl_getinfo($ch, CURLINFO_HTTP_CODE) . "\n";
-		echo "CURLINFO_SSL_VERIFYRESULT: " . curl_getinfo($ch, CURLINFO_SSL_VERIFYRESULT) . "\n";
-		echo "CURLINFO_HEADER_SIZE: " . curl_getinfo($ch, CURLINFO_HEADER_SIZE) . "\n";
-
-		echo "</pre>";
-
-		if (FALSE === $result)
-		        throw new Exception(curl_error($ch), curl_errno($ch));
-
-	} catch(Exception $e) {
-
-	    trigger_error(sprintf(
-	        'Curl failed with error #%d: %s',
-	        $e->getCode(), $e->getMessage()),
-	        E_USER_ERROR);
-
-	}
-	curl_close($ch);
+<!-- change col-sm-N to reflect how you would like your column spacing (http://getbootstrap.com/css/#forms-control-sizes) -->
 
 
-}
+<!-- Form Name -->
+<legend>Form Name</legend>
+
+<!-- Text input http://getbootstrap.com/css/#forms -->
+<div class="form-group">
+  <label for="order" class="control-label col-sm-2">Order-id</label>
+  <div class="col-sm-10">
+    <input type="tel" class="form-control" id="order" value="DF16021201">
+    <p class="help-block">The order id used as payment reference</p>
+  </div>
+</div>
+<div class="form-group">
+  <label for="phone" class="control-label col-sm-2">Mobilnummer</label>
+  <div class="col-sm-10">
+    <input type="tel" class="form-control" id="phone" placeholder="467x xxx xx xx" value="46727127127">
+    <p class="help-block">The phone number you'd like to swish from</p>
+  </div>
+</div>
+<!-- Button http://getbootstrap.com/css/#buttons -->
+<div class="form-group">
+  <label class="control-label col-sm-2" for="send-btn">Send request</label>
+  <div class="text-left col-sm-10">
+    <button type="button" id="send-btn" name="send-btn" class="btn btn-success" aria-label="Send request">Send</button>
+      <img width="50" src="https://i1.wp.com/cdnjs.cloudflare.com/ajax/libs/galleriffic/2.0.1/css/loader.gif" alt="Loading..." class="loader-img hide">
+      <img width="50" src="https://upload.wikimedia.org/wikipedia/commons/a/ac/Crystal_Project_success.png" alt="Success!" class="success-img hide">
+    <p class="help-block">Send the request</p>
+  </div>
+</div>
+
+<!-- Text input http://getbootstrap.com/css/#forms -->
+<div class="form-group">
+  <label for="transid-input" class="control-label col-sm-2">Transaction ID</label>
+  <div class="col-sm-10">
+    <input type="text" class="form-control" id="transid-input" placeholder="" readonly="">
+    <p class="help-block">The transaction id number returned by the API</p>
+  </div>
+</div>
+<!-- Button Group http://getbootstrap.com/components/#btn-groups -->
+<div class="form-group">
+  <label class="control-label col-sm-2">Button Group</label>
+  <div class="text-left col-sm-10">
+    <div id="status-unpaid-btnGroup" class="btn-group" role="group" aria-label="Button Group">
+      <button type="button" id="status-unpaid-btn" name="status-unpaid-btn" class="btn btn-danger" aria-label="Set status: unpaid">Set status: unpaid</button>
+      <button type="button" id="status-paid-btn" name="status-paid-btn" class="btn btn-success" aria-label="Set status: unpaid">Set status: paid</button>
+    </div>
+    <p class="help-block">Set the session variable for payment status</p>
+  </div>
+</div>
+
+<div id="msg"></div>
 
 
+</fieldset>
+</form>
+</div>
 
-function getPayment($paymentId, $config){
-	try{
-
-		if($paymentId != ""){
-
-			$ch = curl_init('https://mss.swicpc.bankgirot.se/swish-cpcapi/api/v1/paymentrequests/' . $paymentId); 
-			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
-			//curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); //Uncomment this if you didn't add the root CA, curl will then ignore the SSL verification error.
-
-			curl_setopt($ch, CURLOPT_CAINFO,  $config["CAINFO"]);
-			curl_setopt($ch, CURLOPT_SSLCERT,  $config["SSLCERT"]);
-			curl_setopt($ch, CURLOPT_SSLKEY,  $config["SSLKEY"]);
-			curl_setopt($ch, CURLOPT_SSLCERTPASSWD,  $config["SSLCERTPASSWD"]);
-			curl_setopt($ch, CURLOPT_SSLKEYPASSWD,  $config["SSLKEYPASSWD"]);
-
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-			curl_setopt($ch, CURLOPT_VERBOSE, 1);
-			curl_setopt($ch, CURLOPT_HEADER, 1);
-
-			$result = curl_exec($ch);
-
-			//Debug: response, including headers
-			echo "<h2>Result</h2>";
-			echo "<pre>";
-			var_dump($result);
-			echo "</pre>";
-			echo "<hr>";
-			echo "<pre>";
-			echo $result;
-			echo "</pre>";
-			echo "<pre>";
-			echo "CURLINFO_EFFECTIVE_URL: " . curl_getinfo($ch, CURLINFO_EFFECTIVE_URL) . "\n";
-			echo "CURLINFO_HTTP_CODE: " . curl_getinfo($ch, CURLINFO_HTTP_CODE) . "\n";
-			echo "CURLINFO_SSL_VERIFYRESULT: " . curl_getinfo($ch, CURLINFO_SSL_VERIFYRESULT) . "\n";
-			echo "CURLINFO_HEADER_SIZE: " . curl_getinfo($ch, CURLINFO_HEADER_SIZE) . "\n";
-
-			echo "</pre>";
-		}else{
-			echo "No payment ID specified";
-		}
-
-		if (FALSE === $result)
-		        throw new Exception(curl_error($ch), curl_errno($ch));
-
-	} catch(Exception $e) {
-
-	    trigger_error(sprintf(
-	        'Curl failed with error #%d: %s',
-	        $e->getCode(), $e->getMessage()),
-	        E_USER_ERROR);
-
-	}
-	curl_close($ch);
-
-
-}
-
-// Globals
-$config = array(
-	"callbackUrl" => "https://example.com/api/swishcb/paymentrequests",
-	"payeeAlias" => "1231181189",
-	"currency" => "SEK",
-
-	"CAINFO" => 'C:\wamp\bin\apache\apache2.4.9\conf\ssl\ca.pem', //Path to root CA
-	"SSLCERT" => 'C:\wamp\bin\apache\apache2.4.9\conf\ssl\client.pem', //Path to client certificate
-	"SSLKEY" => 'C:\wamp\bin\apache\apache2.4.9\conf\ssl\key.pem', //Path to private key
-	"SSLCERTPASSWD" => 'swish', //Password for client certificate, if it's protected
-	"SSLKEYPASSWD" => 'swish' //Password for private key password, if it's protected
-);
-
-// createPayment("davidBet01", "", "2435", "Test 1", $config);
-getPayment("7452784219594AA89AF511CED4ED03DA", $config);
-
-
-// Location: http://172.31.21.186:8580/swish-cpcapi/api/v1/paymentrequests/7452784219594AA89AF511CED4ED03DA
-// PaymentRequestToken: dFJ4QhlZSqia9RHO1O0D2qHbaGzSjYVz
-
-?>
+</body>
+</html>
