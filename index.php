@@ -24,18 +24,17 @@
               console.info("Order completed.");
               $(".loader-img").toggleClass("hide", true);
               $(".success-img").toggleClass("hide", false);
-              resetTransaction();
             }else{
               console.warn("Status: " + data.status);
               poll();
             }
           });
-        }, 500);
+        }, 2000);
       };
 
       $("#send-btn").click(function(){
         var nr = $("#phone").val();
-        $.get("ajax.php?phone=" + nr, function(data){
+        $.get("ajax.php?orderId=" + $("#order").val() + "&phone=" + nr, function(data){
           $("#msg").html(data);
           data = JSON.parse(data);
           transId = data.transactionId;
@@ -45,7 +44,7 @@
         });
       });
 
-      $("#status-unpaid-btn").click(function resetTransaction(){
+      $("#status-unpaid-btn").click(function(){
         $.post("callback.php", {"transactionId": transId, "status":"UNPAID"}, function(data){
           $("#status-unpaid-btn").toggleClass("active", true);
           $("#status-paid-btn").toggleClass("active", false);

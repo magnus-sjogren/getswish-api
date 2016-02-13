@@ -28,7 +28,7 @@ function createPayment($paymentReference, $payerAlias, $amount, $message, $confi
 		$data_string = json_encode($data);
 
 		//Debug: request body
-		echo "<h2>Sent data:</h2>" . "<pre>" . $data_string . "</pre>" . "<hr>";
+		// echo "<h2>Sent data:</h2>" . "<pre>" . $data_string . "</pre>" . "<hr>";
 
 		$ch = curl_init('https://mss.swicpc.bankgirot.se/swish-cpcapi/api/v1/paymentrequests/'); 
 		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
@@ -49,20 +49,31 @@ function createPayment($paymentReference, $payerAlias, $amount, $message, $confi
 		$result = curl_exec($ch);
 
 		//Debug: result, including headers
-		echo "<h2>Result</h2>";
-		echo "<pre>";
-		echo $result;
-		echo "</pre>";
-		echo "<pre>";
-		echo "CURLINFO_EFFECTIVE_URL: " . curl_getinfo($ch, CURLINFO_EFFECTIVE_URL) . "\n";
-		echo "CURLINFO_HTTP_CODE: " . curl_getinfo($ch, CURLINFO_HTTP_CODE) . "\n";
-		echo "CURLINFO_SSL_VERIFYRESULT: " . curl_getinfo($ch, CURLINFO_SSL_VERIFYRESULT) . "\n";
-		echo "CURLINFO_HEADER_SIZE: " . curl_getinfo($ch, CURLINFO_HEADER_SIZE) . "\n";
+		// echo "<h2>Result</h2>";
+		// echo "<pre>";
+		// echo $result;
+		// echo "</pre>";
+		// echo "<pre>";
+		// echo "CURLINFO_EFFECTIVE_URL: " . curl_getinfo($ch, CURLINFO_EFFECTIVE_URL) . "\n";
+		// echo "CURLINFO_HTTP_CODE: " . curl_getinfo($ch, CURLINFO_HTTP_CODE) . "\n";
+		// echo "CURLINFO_SSL_VERIFYRESULT: " . curl_getinfo($ch, CURLINFO_SSL_VERIFYRESULT) . "\n";
+		// echo "CURLINFO_HEADER_SIZE: " . curl_getinfo($ch, CURLINFO_HEADER_SIZE) . "\n";
 
-		echo "</pre>";
+		// echo "</pre>";
 
 		if (FALSE === $result)
 		        throw new Exception(curl_error($ch), curl_errno($ch));
+
+
+
+		$headers = explode("\r\n",$result);
+		$locationStr = explode(": ",$headers[2], 2);
+		$locationURL = $locationStr[1];
+		$transactionId = explode("/",$locationURL)[sizeOf(explode("/",$locationURL))-1];
+
+		// Store transactionId in the current order
+
+		return '{"transactionId":"' . $transactionId . '","transactionURL":"' . $locationURL . '"}';
 
 	} catch(Exception $e) {
 
@@ -96,32 +107,34 @@ function getPayment($paymentId, $config){
 
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 			curl_setopt($ch, CURLOPT_VERBOSE, 1);
-			curl_setopt($ch, CURLOPT_HEADER, 1);
+			curl_setopt($ch, CURLOPT_HEADER, 0);
 
 			$result = curl_exec($ch);
 
 			//Debug: response, including headers
-			echo "<h2>Result</h2>";
-			echo "<pre>";
-			var_dump($result);
-			echo "</pre>";
-			echo "<hr>";
-			echo "<pre>";
-			echo $result;
-			echo "</pre>";
-			echo "<pre>";
-			echo "CURLINFO_EFFECTIVE_URL: " . curl_getinfo($ch, CURLINFO_EFFECTIVE_URL) . "\n";
-			echo "CURLINFO_HTTP_CODE: " . curl_getinfo($ch, CURLINFO_HTTP_CODE) . "\n";
-			echo "CURLINFO_SSL_VERIFYRESULT: " . curl_getinfo($ch, CURLINFO_SSL_VERIFYRESULT) . "\n";
-			echo "CURLINFO_HEADER_SIZE: " . curl_getinfo($ch, CURLINFO_HEADER_SIZE) . "\n";
+			// echo "<h2>Result</h2>";
+			// echo "<pre>";
+			// var_dump($result);
+			// echo "</pre>";
+			// echo "<hr>";
+			// echo "<pre>";
+			// echo $result;
+			// echo "</pre>";
+			// echo "<pre>";
+			// echo "CURLINFO_EFFECTIVE_URL: " . curl_getinfo($ch, CURLINFO_EFFECTIVE_URL) . "\n";
+			// echo "CURLINFO_HTTP_CODE: " . curl_getinfo($ch, CURLINFO_HTTP_CODE) . "\n";
+			// echo "CURLINFO_SSL_VERIFYRESULT: " . curl_getinfo($ch, CURLINFO_SSL_VERIFYRESULT) . "\n";
+			// echo "CURLINFO_HEADER_SIZE: " . curl_getinfo($ch, CURLINFO_HEADER_SIZE) . "\n";
 
-			echo "</pre>";
+			// echo "</pre>";
 		}else{
 			echo "No payment ID specified";
 		}
 
 		if (FALSE === $result)
 		        throw new Exception(curl_error($ch), curl_errno($ch));
+
+		echo $result;
 
 	} catch(Exception $e) {
 
@@ -150,23 +163,25 @@ $config = array(
 );
 
 // createPayment("davidBet01", "", "2435", "Test 1", $config);
-// getPayment("7452784219594AA89AF511CED4ED03DA", $config);
+// getPayment("693717E1BAED4E47B715AF5514BFE615", $config);
 
 
-// Location: http://172.31.21.186:8580/swish-cpcapi/api/v1/paymentrequests/7452784219594AA89AF511CED4ED03DA
+// Location: http://172.31.21.186:8580/swish-cpcapi/api/v1/paymentrequests/693717E1BAED4E47B715AF5514BFE615
 // PaymentRequestToken: dFJ4QhlZSqia9RHO1O0D2qHbaGzSjYVz
 
-if(isset($_GET["phone"])){
-	createPayment("davidBet01", "", "2435", "Test 1", $config);
+if(isset($_GET["orderId"]) && isset($_GET["phone"])){
+	echo createPayment($_GET["orderId"], $_GET["phone"], "100", "Test 1", $config);
 }else{
-
-}
-if(isset($_GET["transactionId"])){
-	getPayment($_GET["transactionId"], $config);
-
-	// echo '{"transactionId":"7452784219594AA89AF511CED4ED03DA","status":"' . $_SESSION[$_GET["transactionId"]] . '"}';
-
-}else{
-	// echo '{"transactionId":"7452784219594AA89AF511CED4ED03DA","status":"unknown"}';
+	if(isset($_GET["transactionId"])){
+		// getPayment($_GET["transactionId"], $config);
+		if(isset($_SESSION[$_GET["transactionId"]])){
+			echo '{"transactionId":"' . $_GET["transactionId"] . '","status":"' . $_SESSION[$_GET["transactionId"]] . '"}';
+		}else{
+			echo '{"error":"Callback not received yet", "transactionId":"' . $_GET["transactionId"] . '","status":"unknown"}';
+		}
+	}else{
+		// echo '{"transactionId":"693717E1BAED4E47B715AF5514BFE615","status":"unknown"}';
+		echo '{"error":"Parameter missing"}';
+	}
 }
 ?>
