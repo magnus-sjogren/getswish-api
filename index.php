@@ -1,3 +1,5 @@
+<!-- GetSwish API test by David Forsberg, davidanton.se -->
+<!-- License: CC-Attribution (http://creativecommons.org/licenses/by/4.0/) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
