@@ -94,7 +94,7 @@
 <div class="form-group">
   <label for="phone" class="control-label col-sm-2">Mobilnummer</label>
   <div class="col-sm-10">
-    <input type="tel" class="form-control" id="phone" placeholder="467x xxx xx xx" value="46727127127">
+    <input type="tel" class="form-control" id="phone" placeholder="467x xxx xx xx" value="46700000000">
     <p class="help-block">The phone number you'd like to swish from</p>
   </div>
 </div>
