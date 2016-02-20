@@ -8,7 +8,7 @@ I take no responsibility for how well they're gonna work in the future.
 Information and documentation are available at [GetSwish.se](https://www.getswish.se/handel/).
 
 ##License
-Licenced as [CC-BY](https://creativecommons.org/licenses/by/3.0/)
+Licenced as [CC-BY](https://creativecommons.org/licenses/by/3.0/).
 
 ##API support so far
 Currently the application supports payment requests, status retrieval and simulation of the payment capture callback.
