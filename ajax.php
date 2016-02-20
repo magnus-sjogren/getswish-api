@@ -174,10 +174,14 @@ if(isset($_GET["orderId"]) && isset($_GET["phone"])){
 }else{
 	if(isset($_GET["transactionId"])){
 		// getPayment($_GET["transactionId"], $config);
-		if(isset($_SESSION[$_GET["transactionId"]])){
-			echo '{"transactionId":"' . $_GET["transactionId"] . '","status":"' . $_SESSION[$_GET["transactionId"]] . '"}';
+		if(isset($_GET["action"]) && $_GET["action"] == "update"){
+			getPayment($_GET["transactionId"], $config);
 		}else{
-			echo '{"error":"Callback not received yet", "transactionId":"' . $_GET["transactionId"] . '","status":"unknown"}';
+			if(isset($_SESSION[$_GET["transactionId"]])){
+				echo '{"transactionId":"' . $_GET["transactionId"] . '","status":"' . $_SESSION[$_GET["transactionId"]]["status"] . '"}';
+			}else{
+				echo '{"error":"Callback not received yet", "transactionId":"' . $_GET["transactionId"] . '","status":"unknown"}';
+			}
 		}
 	}else{
 		// echo '{"transactionId":"693717E1BAED4E47B715AF5514BFE615","status":"unknown"}';

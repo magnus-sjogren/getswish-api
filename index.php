@@ -18,7 +18,7 @@
         setTimeout(function(){
           console.warn("Polling...");
           $.get("ajax.php?transactionId=" + transId, function(data){
-            $("#msg").html(data);
+            $("#msg-poll").html(data);
             data = JSON.parse(data);
             if(data && data.status == "PAID"){
               alert("Thank you for your order!");
@@ -37,7 +37,7 @@
       $("#send-btn").click(function(){
         var nr = $("#phone").val();
         $.get("ajax.php?orderId=" + $("#order").val() + "&phone=" + nr, function(data){
-          $("#msg").html(data);
+          $("#msg-poll").html(data);
           data = JSON.parse(data);
           transId = data.transactionId;
           console.info("Transid: " + transId);
@@ -46,23 +46,23 @@
         });
       });
 
-      $("#status-unpaid-btn").click(function(){
-        $.post("callback.php", {"transactionId": transId, "status":"UNPAID"}, function(data){
-          $("#status-unpaid-btn").toggleClass("active", true);
-          $("#status-paid-btn").toggleClass("active", false);
-
-          console.log("Data (unpaid): " + data);
-          $("#msg").html(data);
+      var currentStatus = {};
+      $("#callback-sim-btn").click(function(){
+        if(!transId){
+          transId = $("#transid-input").val();
+        }
+        $.get("ajax.php", {"transactionId": transId, "action":"update"}, function(data){
+          console.log("Current status: " + data);
+          $("#msg-callback").html(data);
+          currentStatus = data;
         });
       });
 
-      $("#status-paid-btn").click(function(){
-        $.post("callback.php", {"transactionId": transId, "status":"PAID"}, function(data){
-          $("#status-unpaid-btn").toggleClass("active", false);
-          $("#status-paid-btn").toggleClass("active", true);
-
-          console.log("Data (paid): " + data);
-          $("#msg").html(data);
+      $("#callback-sim-btn2").click(function(){
+        console.log(currentStatus);
+        $.post("callback.php", JSON.parse(currentStatus), function(data){
+          console.log("Callback response: " + data);
+          $("#msg-callback").html(data);
         });
       });
 
@@ -113,23 +113,23 @@
 <div class="form-group">
   <label for="transid-input" class="control-label col-sm-2">Transaction ID</label>
   <div class="col-sm-10">
-    <input type="text" class="form-control" id="transid-input" placeholder="" readonly="">
+    <input type="text" class="form-control" id="transid-input" placeholder="" >
     <p class="help-block">The transaction id number returned by the API</p>
   </div>
 </div>
-<!-- Button Group http://getbootstrap.com/components/#btn-groups -->
+
 <div class="form-group">
-  <label class="control-label col-sm-2">Button Group</label>
+  <label class="control-label col-sm-2" for="send-btn">Simulate callback</label>
   <div class="text-left col-sm-10">
-    <div id="status-unpaid-btnGroup" class="btn-group" role="group" aria-label="Button Group">
-      <button type="button" id="status-unpaid-btn" name="status-unpaid-btn" class="btn btn-danger" aria-label="Set status: unpaid">Set status: unpaid</button>
-      <button type="button" id="status-paid-btn" name="status-paid-btn" class="btn btn-success" aria-label="Set status: unpaid">Set status: paid</button>
-    </div>
-    <p class="help-block">Set the session variable for payment status</p>
+    <button type="button" id="callback-sim-btn" name="callback-sim-btn" class="btn btn-primary">Get status</button>
+    <button type="button" id="callback-sim-btn2" name="callback-sim-btn2" class="btn btn-success" aria-label="Send request">Send to callback.php</button>
+    <p class="help-block">Since testing could take place behind a firewall or NAT, you can manually retrieve the payment status and simulate the callback call through an AJAX request.</p>
   </div>
 </div>
+<div id="msg-poll"></div>
+<div id="msg-callback"></div>
 
-<div id="msg"></div>
+
 
 
 </fieldset>
