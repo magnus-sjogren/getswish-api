@@ -30,7 +30,7 @@ function createPayment($paymentReference, $payerAlias, $amount, $message, $confi
 		//Debug: request body
 		// echo "<h2>Sent data:</h2>" . "<pre>" . $data_string . "</pre>" . "<hr>";
 
-		$ch = curl_init('https://mss.swicpc.bankgirot.se/swish-cpcapi/api/v1/paymentrequests/'); 
+		$ch = curl_init('https://mss.cpc.getswish.net/swish-cpcapi/api/v1/paymentrequests/'); 
 		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
 		//curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); //Uncomment this if you didn't add the root CA, curl will then ignore the SSL verification error.
@@ -95,7 +95,7 @@ function getPayment($paymentId, $config){
 
 		if($paymentId != ""){
 
-			$ch = curl_init('https://mss.swicpc.bankgirot.se/swish-cpcapi/api/v1/paymentrequests/' . $paymentId); 
+			$ch = curl_init('https://mss.cpc.getswish.net/swish-cpcapi/api/v1/paymentrequests/' . $paymentId); 
 			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
 			//curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); //Uncomment this if you didn't add the root CA, curl will then ignore the SSL verification error.
 
